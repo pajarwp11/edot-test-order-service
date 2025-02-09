@@ -48,6 +48,9 @@ func (c *CartHandler) Insert(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	userId := req.Header.Get("X-User-ID")
+	request.UserId, _ = strconv.Atoi(userId)
+
 	err := c.cartUsecase.Insert(&request)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)

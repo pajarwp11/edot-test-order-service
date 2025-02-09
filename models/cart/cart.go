@@ -1,8 +1,8 @@
 package cart
 
 type Cart struct {
-	UserId   int       `json:"user_id" validate:"required"`
-	Products []Product `json:"products"`
+	UserId   int       `json:"user_id"`
+	Products []Product `json:"products" validate:"required"`
 }
 
 type Product struct {
