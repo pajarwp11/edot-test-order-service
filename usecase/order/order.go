@@ -10,6 +10,8 @@ import (
 type OrderRepository interface {
 	Insert(tx *sqlx.Tx, order *order.Order) (int, error)
 	InsertDetails(tx *sqlx.Tx, orderId int, products []cart.Product) error
+	UpdateStatus(tx *sqlx.Tx, id int, status string) error
+	GetOrderWithDetails(orderId int) (*order.OrderWithDetails, error)
 }
 
 type CartRepository interface {
@@ -79,6 +81,47 @@ func (o *OrderUsecase) Checkout(orderCheckout *order.CheckoutRequest) error {
 	tx.Commit()
 	if orderCheckout.IsCart != nil && *orderCheckout.IsCart == 1 {
 		o.cartRepository.Delete(orderCheckout.UserId)
+	}
+	return nil
+}
+
+func (o *OrderUsecase) UpdateStatus(updateStatus *order.UpdateStatusRequest) error {
+	orderWithDetail, err := o.orderRepo.GetOrderWithDetails(updateStatus.Id)
+	if err != nil {
+		return err
+	}
+	tx, err := o.mysql.Beginx()
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err != nil {
+			tx.Rollback()
+		}
+	}()
+	err = o.orderRepo.UpdateStatus(tx, updateStatus.Id, updateStatus.Status)
+	if err != nil {
+		return err
+	}
+	var event string
+	if updateStatus.Status == "success" {
+		event = "stock.release"
+	} else {
+		event = "stock.return"
+	}
+
+	stockOperation := []order.StockOperationRequest{}
+	for _, product := range orderWithDetail.Details {
+		reserveStock := order.StockOperationRequest{
+			ProductId: product.ProductId,
+			Quantity:  product.Quantity,
+		}
+		stockOperation = append(stockOperation, reserveStock)
+	}
+
+	err = o.publisher.PublishEvent(event, stockOperation)
+	if err != nil {
+		return err
 	}
 	return nil
 }

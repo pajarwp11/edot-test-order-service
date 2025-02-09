@@ -24,3 +24,26 @@ type StockOperationRequest struct {
 	ProductId int `json:"product_id"`
 	Quantity  int `json:"quantity"`
 }
+
+type UpdateStatusRequest struct {
+	Id     int
+	Status string `json:"status" validate:"required"`
+}
+
+type OrderWithDetails struct {
+	ID         int           `db:"id" json:"id"`
+	UserId     int           `db:"user_id" json:"user_id"`
+	TotalPrice int           `db:"total_price" json:"total_price"`
+	Status     string        `db:"status" json:"status"`
+	Details    []OrderDetail `json:"details"`
+}
+
+type OrderDetail struct {
+	ID          int    `db:"id" json:"id"`
+	OrderID     int    `db:"order_id" json:"order_id"`
+	ProductId   int    `db:"product_id" json:"product_id"`
+	ProductName string `db:"product_name" json:"product_name"`
+	Quantity    int    `db:"quantity" json:"quantity"`
+	Price       int    `db:"price" json:"price"`
+	TotalPrice  int    `db:"total_price" json:"total_price"`
+}

@@ -37,6 +37,7 @@ func main() {
 	orderUsecase := orderUsecase.NewOrderUsecase(orderRepository, cartRepository, mysql.MySQL, rabbitPublisher)
 	orderHandler := orderHandler.NewOrderHandler(orderUsecase)
 	router.Handle("/order/checkout", middleware.JWTMiddleware(http.HandlerFunc(orderHandler.Checkout))).Methods(http.MethodPost)
+	router.Handle("/order/update-status", middleware.JWTMiddleware(http.HandlerFunc(orderHandler.UpdateStatus))).Methods(http.MethodPut)
 
 	fmt.Println("server is running")
 	err := http.ListenAndServe(":8004", router)
