@@ -18,3 +18,8 @@ type CheckoutRequest struct {
 	IsCart   *int           `json:"is_cart" validate:"required"`
 	Products []cart.Product `json:"products" validate:"required"`
 }
+
+type StockOperationRequest struct {
+	ProductId int `json:"product_id"`
+	Quantity  int `json:"quantity"`
+}

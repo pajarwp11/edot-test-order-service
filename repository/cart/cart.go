@@ -45,3 +45,9 @@ func (c *CartRepository) Get(userId int) (*cart.Cart, error) {
 	}
 	return &cart, nil
 }
+
+func (c *CartRepository) Delete(userId int) error {
+	key := fmt.Sprintf("cart:%d", userId)
+	ctx := context.Background()
+	return c.redisClient.Del(ctx, key).Err()
+}

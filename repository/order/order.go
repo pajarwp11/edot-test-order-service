@@ -19,12 +19,19 @@ func NewOrderRepository(mysql *sqlx.DB) *OrderRepository {
 	}
 }
 
-func (p *OrderRepository) Insert(order *order.Order) error {
-	_, err := p.mysql.Exec("INSERT INTO orders (user_id,total_price) VALUES (?,?)", order.UserId, order.TotalPrice)
-	return err
+func (p *OrderRepository) Insert(tx *sqlx.Tx, order *order.Order) (int, error) {
+	res, err := tx.Exec("INSERT INTO orders (user_id,total_price) VALUES (?,?)", order.UserId, order.TotalPrice)
+	if err != nil {
+		return 0, err
+	}
+	orderId, err := res.LastInsertId()
+	if err != nil {
+		return 0, err
+	}
+	return int(orderId), nil
 }
 
-func (p *OrderRepository) InsertDetails(orderId int, products []*cart.Product) error {
+func (p *OrderRepository) InsertDetails(tx *sqlx.Tx, orderId int, products []cart.Product) error {
 	if len(products) == 0 {
 		return nil
 	}
@@ -42,6 +49,6 @@ func (p *OrderRepository) InsertDetails(orderId int, products []*cart.Product) e
 		strings.Join(values, ","),
 	)
 
-	_, err := p.mysql.Exec(query, args...)
+	_, err := tx.Exec(query, args...)
 	return err
 }
