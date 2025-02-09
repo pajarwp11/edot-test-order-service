@@ -61,6 +61,7 @@ func (o *OrderUsecase) Checkout(orderCheckout *order.CheckoutRequest) error {
 	orderData := order.Order{
 		UserId:     orderCheckout.UserId,
 		TotalPrice: totalPrice,
+		Status:     "pending",
 	}
 	orderId, err := o.orderRepo.Insert(tx, &orderData)
 	if err != nil {
@@ -76,7 +77,7 @@ func (o *OrderUsecase) Checkout(orderCheckout *order.CheckoutRequest) error {
 		return err
 	}
 	tx.Commit()
-	if *orderCheckout.IsCart == 1 {
+	if orderCheckout.IsCart != nil && *orderCheckout.IsCart == 1 {
 		o.cartRepository.Delete(orderCheckout.UserId)
 	}
 	return nil

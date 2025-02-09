@@ -20,7 +20,7 @@ func NewOrderRepository(mysql *sqlx.DB) *OrderRepository {
 }
 
 func (p *OrderRepository) Insert(tx *sqlx.Tx, order *order.Order) (int, error) {
-	res, err := tx.Exec("INSERT INTO orders (user_id,total_price) VALUES (?,?)", order.UserId, order.TotalPrice)
+	res, err := tx.Exec("INSERT INTO orders (user_id,total_price,status) VALUES (?,?,?)", order.UserId, order.TotalPrice, order.Status)
 	if err != nil {
 		return 0, err
 	}

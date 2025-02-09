@@ -9,6 +9,7 @@ type Order struct {
 	Id         int       `db:"id" json:"id"`
 	UserId     int       `db:"user_id" json:"user_id"`
 	TotalPrice int       `db:"total_price" json:"total_price"`
+	Status     string    `db:"status" json:"status"`
 	CreatedAt  time.Time `db:"created_at" json:"created_at"`
 	UpdatedAt  time.Time `db:"updated_at" json:"updated_at"`
 }
