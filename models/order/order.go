@@ -26,7 +26,7 @@ type StockOperationRequest struct {
 }
 
 type UpdateStatusRequest struct {
-	Id     int    `json:"status"`
+	Id     int    `json:"id"`
 	Status string `json:"status" validate:"required"`
 }
 
