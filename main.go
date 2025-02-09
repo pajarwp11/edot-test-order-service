@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"order-service/db/mysql"
-	"order-service/db/redis"
+	"order-service/conn/mysql"
+	"order-service/conn/rabbitmq"
+	"order-service/conn/redis"
 
 	cartHandler "order-service/handler/cart"
 	"order-service/middleware"
@@ -18,6 +19,9 @@ import (
 func main() {
 	mysql.Connect()
 	redis.Connect()
+	rabbitmq.Connect()
+	_ = rabbitmq.NewRabbitPublisher(rabbitmq.RabbitConn)
+
 	router := mux.NewRouter()
 	cartRepository := cartRepo.NewCartRepository(redis.Redis)
 	cartUsecase := cartUsecase.NewCartUsecase(cartRepository)
