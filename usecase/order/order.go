@@ -49,7 +49,7 @@ func (o *OrderUsecase) Checkout(orderCheckout *order.CheckoutRequest) error {
 		}
 	}()
 
-	reserveStocks := []order.StockOperationRequest{}
+	reserveStocks := order.StockOperationOrderRequest{}
 	totalPrice := 0
 	for _, product := range orderCheckout.Products {
 		totalPrice += product.TotalPrice
@@ -57,7 +57,7 @@ func (o *OrderUsecase) Checkout(orderCheckout *order.CheckoutRequest) error {
 			ProductId: product.ProductId,
 			Quantity:  product.Quantity,
 		}
-		reserveStocks = append(reserveStocks, reserveStock)
+		reserveStocks.StockOperations = append(reserveStocks.StockOperations, reserveStock)
 	}
 
 	orderData := order.Order{
@@ -74,6 +74,7 @@ func (o *OrderUsecase) Checkout(orderCheckout *order.CheckoutRequest) error {
 		return err
 	}
 
+	reserveStocks.OrderId = orderId
 	err = o.publisher.PublishEvent("stock.reserve", reserveStocks)
 	if err != nil {
 		return err
