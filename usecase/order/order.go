@@ -85,7 +85,7 @@ func (o *OrderUsecase) Checkout(orderCheckout *order.CheckoutRequest) error {
 	return nil
 }
 
-func (o *OrderUsecase) UpdateStatus(updateStatus *order.UpdateStatusRequest) error {
+func (o *OrderUsecase) UpdateStatus(updateStatus *order.UpdateStatusRequest, isConsumer bool) error {
 	orderWithDetail, err := o.orderRepo.GetOrderWithDetails(updateStatus.Id)
 	if err != nil {
 		return err
@@ -103,25 +103,29 @@ func (o *OrderUsecase) UpdateStatus(updateStatus *order.UpdateStatusRequest) err
 	if err != nil {
 		return err
 	}
-	var event string
-	if updateStatus.Status == "success" {
-		event = "stock.release"
-	} else {
-		event = "stock.return"
-	}
 
-	stockOperation := []order.StockOperationRequest{}
-	for _, product := range orderWithDetail.Details {
-		reserveStock := order.StockOperationRequest{
-			ProductId: product.ProductId,
-			Quantity:  product.Quantity,
+	if !isConsumer {
+		var event string
+		if updateStatus.Status == "success" {
+			event = "stock.release"
+		} else {
+			event = "stock.return"
 		}
-		stockOperation = append(stockOperation, reserveStock)
+
+		stockOperation := []order.StockOperationRequest{}
+		for _, product := range orderWithDetail.Details {
+			reserveStock := order.StockOperationRequest{
+				ProductId: product.ProductId,
+				Quantity:  product.Quantity,
+			}
+			stockOperation = append(stockOperation, reserveStock)
+		}
+
+		err = o.publisher.PublishEvent(event, stockOperation)
+		if err != nil {
+			return err
+		}
 	}
 
-	err = o.publisher.PublishEvent(event, stockOperation)
-	if err != nil {
-		return err
-	}
 	return nil
 }

@@ -39,6 +39,9 @@ func main() {
 	router.Handle("/order/checkout", middleware.JWTMiddleware(http.HandlerFunc(orderHandler.Checkout))).Methods(http.MethodPost)
 	router.Handle("/order/update-status", middleware.JWTMiddleware(http.HandlerFunc(orderHandler.UpdateStatus))).Methods(http.MethodPut)
 
+	rabbitConsumer := rabbitmq.NewRabbitConsumer(rabbitmq.RabbitConn, orderHandler)
+	go rabbitConsumer.ConsumeEvents()
+
 	fmt.Println("server is running")
 	err := http.ListenAndServe(":8004", router)
 	if err != nil {
