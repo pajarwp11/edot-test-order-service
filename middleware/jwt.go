@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -10,32 +11,46 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 )
 
+type Response struct {
+	Message string      `json:"message"`
+	Data    interface{} `json:"data"`
+}
+
 func JWTMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		response := Response{}
+		w.Header().Set("Content-Type", "application/json")
 		authHeader := r.Header.Get("Authorization")
 		if authHeader == "" {
-			http.Error(w, "missing authorization header", http.StatusUnauthorized)
+			w.WriteHeader(http.StatusUnauthorized)
+			response.Message = "missing authorization header"
+			json.NewEncoder(w).Encode(response)
 			return
 		}
 
 		tokenString := strings.TrimPrefix(authHeader, "Bearer ")
 		if tokenString == authHeader {
-			http.Error(w, "invalid token format", http.StatusUnauthorized)
+			w.WriteHeader(http.StatusUnauthorized)
+			response.Message = "invalid token format"
+			json.NewEncoder(w).Encode(response)
 			return
 		}
 
 		claims, err := validateJWT(tokenString)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusUnauthorized)
+			w.WriteHeader(http.StatusUnauthorized)
+			response.Message = err.Error()
+			json.NewEncoder(w).Encode(response)
 			return
 		}
 
 		userID, ok := claims["user_id"].(float64)
 		if !ok {
-			http.Error(w, "invalid token payload", http.StatusUnauthorized)
+			w.WriteHeader(http.StatusUnauthorized)
+			response.Message = "invalid token payload"
+			json.NewEncoder(w).Encode(response)
 			return
 		}
-
 		r.Header.Set("X-User-ID", fmt.Sprintf("%d", int(userID)))
 
 		next.ServeHTTP(w, r)
