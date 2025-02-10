@@ -12,7 +12,8 @@ import (
 
 type OrderUsecase interface {
 	Checkout(orderCheckout *order.CheckoutRequest) error
-	UpdateStatus(updateStatus *order.UpdateStatusRequest, isConsumer bool) error
+	UpdateStatus(updateStatus *order.UpdateStatusRequest) error
+	UpdateStatusConsumer(updateStatus *order.UpdateStatusRequest) error
 }
 
 type OrderHandler struct {
@@ -99,7 +100,7 @@ func (o *OrderHandler) UpdateStatus(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	err = o.orderUsecase.UpdateStatus(&request, false)
+	err = o.orderUsecase.UpdateStatus(&request)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		response.Message = err.Error()

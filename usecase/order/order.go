@@ -86,7 +86,7 @@ func (o *OrderUsecase) Checkout(orderCheckout *order.CheckoutRequest) error {
 	return nil
 }
 
-func (o *OrderUsecase) UpdateStatus(updateStatus *order.UpdateStatusRequest, isConsumer bool) error {
+func (o *OrderUsecase) UpdateStatus(updateStatus *order.UpdateStatusRequest) error {
 	orderWithDetail, err := o.orderRepo.GetOrderWithDetails(updateStatus.Id)
 	if err != nil {
 		return err
@@ -105,27 +105,43 @@ func (o *OrderUsecase) UpdateStatus(updateStatus *order.UpdateStatusRequest, isC
 		return err
 	}
 
-	if !isConsumer {
-		var event string
-		if updateStatus.Status == "success" {
-			event = "stock.release"
-		} else {
-			event = "stock.return"
-		}
+	var event string
+	if updateStatus.Status == "success" {
+		event = "stock.release"
+	} else {
+		event = "stock.return"
+	}
 
-		stockOperation := []order.StockOperationRequest{}
-		for _, product := range orderWithDetail.Details {
-			reserveStock := order.StockOperationRequest{
-				ProductId: product.ProductId,
-				Quantity:  product.Quantity,
-			}
-			stockOperation = append(stockOperation, reserveStock)
+	stockOperation := []order.StockOperationRequest{}
+	for _, product := range orderWithDetail.Details {
+		reserveStock := order.StockOperationRequest{
+			ProductId: product.ProductId,
+			Quantity:  product.Quantity,
 		}
+		stockOperation = append(stockOperation, reserveStock)
+	}
 
-		err = o.publisher.PublishEvent(event, stockOperation)
+	err = o.publisher.PublishEvent(event, stockOperation)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (o *OrderUsecase) UpdateStatusConsumer(updateStatus *order.UpdateStatusRequest) error {
+	tx, err := o.mysql.Beginx()
+	if err != nil {
+		return err
+	}
+	defer func() {
 		if err != nil {
-			return err
+			tx.Rollback()
 		}
+	}()
+	err = o.orderRepo.UpdateStatus(tx, updateStatus.Id, updateStatus.Status)
+	if err != nil {
+		return err
 	}
 
 	return nil

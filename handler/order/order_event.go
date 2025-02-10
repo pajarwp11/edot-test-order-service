@@ -20,7 +20,7 @@ func (o *OrderHandler) UpdateStatusByConsumer(data interface{}) error {
 		return err
 	}
 
-	err = o.orderUsecase.UpdateStatus(&request, true)
+	err = o.orderUsecase.UpdateStatusConsumer(&request)
 	if err != nil {
 		return err
 	}
