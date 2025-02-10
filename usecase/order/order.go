@@ -1,6 +1,7 @@
 package order
 
 import (
+	"fmt"
 	"order-service/models/cart"
 	"order-service/models/order"
 
@@ -91,6 +92,9 @@ func (o *OrderUsecase) UpdateStatus(updateStatus *order.UpdateStatusRequest) err
 	if err != nil {
 		return err
 	}
+	if orderWithDetail.Status != "pending" {
+		return fmt.Errorf("status is already %s", orderWithDetail.Status)
+	}
 	tx, err := o.mysql.Beginx()
 	if err != nil {
 		return err
@@ -130,6 +134,13 @@ func (o *OrderUsecase) UpdateStatus(updateStatus *order.UpdateStatusRequest) err
 }
 
 func (o *OrderUsecase) UpdateStatusConsumer(updateStatus *order.UpdateStatusRequest) error {
+	orderWithDetail, err := o.orderRepo.GetOrderWithDetails(updateStatus.Id)
+	if err != nil {
+		return err
+	}
+	if orderWithDetail.Status != "pending" {
+		return fmt.Errorf("status is already %s", orderWithDetail.Status)
+	}
 	tx, err := o.mysql.Beginx()
 	if err != nil {
 		return err
