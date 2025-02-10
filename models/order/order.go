@@ -30,6 +30,10 @@ type StockOperationOrderRequest struct {
 	StockOperations []StockOperationRequest `json:"stock_operations"`
 }
 
+type StockUpdateOperationRequest struct {
+	OrderId int `json:"order_id"`
+}
+
 type UpdateStatusRequest struct {
 	Id     int    `json:"id"`
 	Status string `json:"status" validate:"required"`
