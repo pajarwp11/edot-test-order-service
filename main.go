@@ -37,7 +37,7 @@ func main() {
 	orderUsecase := orderUsecase.NewOrderUsecase(orderRepository, cartRepository, mysql.MySQL, rabbitPublisher)
 	orderHandler := orderHandler.NewOrderHandler(orderUsecase)
 	router.Handle("/order/checkout", middleware.JWTMiddleware(http.HandlerFunc(orderHandler.Checkout))).Methods(http.MethodPost)
-	router.Handle("/order/update-status", middleware.JWTMiddleware(http.HandlerFunc(orderHandler.UpdateStatus))).Methods(http.MethodPut)
+	router.Handle("/order/update-status/{id}", middleware.JWTMiddleware(http.HandlerFunc(orderHandler.UpdateStatus))).Methods(http.MethodPut)
 
 	rabbitConsumer := rabbitmq.NewRabbitConsumer(rabbitmq.RabbitConn, orderHandler)
 	go rabbitConsumer.ConsumeEvents()

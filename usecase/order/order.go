@@ -116,13 +116,14 @@ func (o *OrderUsecase) UpdateStatus(updateStatus *order.UpdateStatusRequest) err
 		event = "stock.return"
 	}
 
-	stockOperation := []order.StockOperationRequest{}
+	stockOperation := order.StockOperationOrderRequest{}
+	stockOperation.OrderId = updateStatus.Id
 	for _, product := range orderWithDetail.Details {
 		reserveStock := order.StockOperationRequest{
 			ProductId: product.ProductId,
 			Quantity:  product.Quantity,
 		}
-		stockOperation = append(stockOperation, reserveStock)
+		stockOperation.StockOperations = append(stockOperation.StockOperations, reserveStock)
 	}
 
 	err = o.publisher.PublishEvent(event, stockOperation)
