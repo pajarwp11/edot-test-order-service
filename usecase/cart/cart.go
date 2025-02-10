@@ -1,7 +1,10 @@
 package cart
 
 import (
+	"errors"
 	"order-service/models/cart"
+
+	"github.com/redis/go-redis/v9"
 )
 
 type CartRepository interface {
@@ -24,5 +27,12 @@ func (c *CartUsecase) Insert(cart *cart.Cart) error {
 }
 
 func (c *CartUsecase) Get(userId int) (*cart.Cart, error) {
-	return c.cartRepo.Get(userId)
+	cartData, err := c.cartRepo.Get(userId)
+	if err != nil {
+		if err == redis.Nil {
+			return nil, errors.New("user does not have cart")
+		}
+		return nil, err
+	}
+	return cartData, nil
 }
